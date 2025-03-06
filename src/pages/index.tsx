@@ -1,41 +1,33 @@
-import { styled } from "@/styles";
+import Stripe from "stripe";
 import Head from "next/head";
-import { HomeContainer, Product } from "@/styles/pages/home";
-import { useKeenSlider } from "keen-slider/react";
 import Link from "next/link";
-
 import Image from "next/image";
 
-import "keen-slider/keen-slider.min.css";
+import { styled } from "@/styles";
 import { stripe } from "@/lib/stripe";
+import { HomeContainer, Product } from "@/styles/pages/home";
+
+import "keen-slider/keen-slider.min.css";
 import { GetStaticProps } from "next";
-import Stripe from "stripe";
-
-const Button = styled("button", {
-  backgroundColor: "$green300",
-  borderRadius: 8,
-  border: 0,
-  padding: "4px 8px",
-
-  span: {
-    fontWeight: "bold",
-  },
-
-  "&:hover": {
-    filter: "brightness(0.8)",
-  },
-});
+import { useKeenSlider } from "keen-slider/react";
+import { useShoppingCart } from "use-shopping-cart";
+import { Bag } from "@phosphor-icons/react/dist/ssr";
+import { toast } from "react-toastify";
 
 interface HomeProps {
   products: {
     id: string;
     name: string;
     imageUrl: string;
-    price: string;
+    price: number;
+    sku: string;
+    currency: string;
   }[];
 }
 
 export default function Home({ products }: HomeProps) {
+  const { addItem, shouldDisplayCart } = useShoppingCart();
+
   const [sliderRef] = useKeenSlider({
     slides: {
       perView: 3,
@@ -48,7 +40,14 @@ export default function Home({ products }: HomeProps) {
       <Head>
         <title>Home | Ignite Shop</title>
       </Head>
-      <HomeContainer ref={sliderRef} className="keen-slider">
+      <HomeContainer
+        ref={sliderRef}
+        className="keen-slider"
+        style={{
+          transform: shouldDisplayCart ? "translateX(-30rem)" : "translateX(0)",
+          transition: "transform 0.3s ease-in-out",
+        }}
+      >
         {products?.map((product) => {
           return (
             <Link
@@ -57,11 +56,36 @@ export default function Home({ products }: HomeProps) {
               prefetch={false}
             >
               <Product className="keen-slider__slide">
-                <Image src={product.imageUrl} width={520} height={480} alt="" />
+                <Image
+                  src={product.imageUrl}
+                  width={520}
+                  height={520}
+                  alt={product.name}
+                  style={{ objectFit: "cover" }}
+                  priority={true}
+                />
 
                 <footer>
-                  <strong>{product.name}</strong>
-                  <span>{product.price}</span>
+                  <div>
+                    <strong>{product.name}</strong>
+                    <span>
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(product?.price)}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      addItem(product);
+                      toast.success(`${product.name} adicionado ao carrinho`);
+                    }}
+                  >
+                    <Bag size={32} />
+                  </button>
                 </footer>
               </Product>
             </Link>
@@ -83,10 +107,9 @@ export const getStaticProps: GetStaticProps = async () => {
       id: product.id,
       name: product.name,
       imageUrl: product.images[0],
-      price: new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }).format(price.unit_amount! / 100),
+      price: (price.unit_amount ?? 0) / 100,
+      sku: price.id,
+      currency: price.currency,
     };
   });
 

@@ -14,7 +14,7 @@ export const Product = styled("div", {
   // padding: "0.25rem",
   cursor: "pointer",
   position: "relative",
-  overflow: 'hidden',
+  overflow: "hidden",
 
   display: "flex",
   alignItems: "center",
@@ -29,7 +29,7 @@ export const Product = styled("div", {
     bottom: "0.25rem",
     left: "0.25rem",
     right: "0.25rem",
-    padding: '2rem',
+    padding: "2rem",
 
     borderRadius: 6,
 
@@ -39,25 +39,48 @@ export const Product = styled("div", {
 
     backgroundColor: "rgba(0, 0, 0, 0.6)",
 
-    transform: 'translateY(110%)',
+    transform: "translateY(110%)",
     opacity: 0,
-    transition: 'all 0.2s ease-in-out',
+    transition: "all 0.2s ease-in-out",
 
-    strong: {
-      fontSize: "$lg",
+    div: {
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "start",
+      gap: " 0.25rem",
+
+      strong: {
+        fontSize: "$lg",
+        color: "$white",
+      },
+
+      span: {
+        fontSize: "$xl",
+        fontWeight: "bold",
+        color: "$green300",
+      },
     },
 
-    span: {
-      fontSize: "$xl",
-      fontWeight: "bold",
-      color: "$green300",
+    button: {
+      padding: "0.75rem",
+      backgroundColor: " $green300",
+      border: 0,
+      color: " $white",
+      borderRadius: 6,
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+
+      "&:hover": {
+        backgroundColor: "$green500",
+        color: "$gray300"
+      },
     },
   },
 
-  '&:hover': {
+  "&:hover": {
     footer: {
-      transform: 'translateY(0%)',
+      transform: "translateY(0%)",
       opacity: 1,
-    }
-  }
+    },
+  },
 });

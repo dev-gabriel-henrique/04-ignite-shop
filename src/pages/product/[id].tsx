@@ -10,12 +10,13 @@ import Head from "next/head";
 import Image from "next/image";
 import { useState } from "react";
 import Stripe from "stripe";
+import { useShoppingCart } from "use-shopping-cart";
 
 interface ProductProps {
   id: string;
   name: string;
   imageUrl: string;
-  price: string;
+  price: number;
   description: string;
   defaultPriceId: string;
 }
@@ -28,43 +29,47 @@ export default function Product({
   price,
   defaultPriceId,
 }: ProductProps) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { shouldDisplayCart, addItem } = useShoppingCart();
 
-  async function handleBuyProduct() {
-    try {
-      setIsLoading(true);
-
-      const response = await axios.post("/api/checkout", {
-        priceId: defaultPriceId,
-      });
-
-      const { checkoutUrl } = response.data;
-
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      alert("falha ao redirecionar ao checkout");
-      setIsLoading(false);
-    }
-  }
+  const handleAddItem = () => {
+    addItem({
+      id: id,
+      name: name,
+      image: imageUrl,
+      sku: defaultPriceId,
+      currency: "BRL",
+      price: price,
+    });
+  };
 
   return (
     <>
       <Head>
         <title>{name} | Ignite Shop</title>
       </Head>
-      <ProductContainer>
+      <ProductContainer
+        style={{
+          transform: shouldDisplayCart ? "translateX(-30rem)" : "translateX(0)",
+          transition: "transform 0.3s ease-in-out",
+        }}
+      >
         <ImageContainer>
           <Image src={imageUrl} width={520} height={480} alt="" />
         </ImageContainer>
 
         <ProductDetails>
           <h1>{name}</h1>
-          <span>{price}</span>
+          <span>
+            {new Intl.NumberFormat("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            }).format(price)}
+          </span>
 
           <p>{description}</p>
 
-          <button disabled={isLoading} onClick={handleBuyProduct}>
-            Comprar agora
+          <button onClick={handleAddItem}>
+            Colocar na sacola
           </button>
         </ProductDetails>
       </ProductContainer>
@@ -95,10 +100,7 @@ export const getStaticProps: GetStaticProps<any, { id: string }> = async ({
       id: product.id,
       name: product.name,
       imageUrl: product.images[0],
-      price: new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }).format(price.unit_amount! / 100),
+      price: (price.unit_amount ?? 0) / 100,
       description: product.description,
       defaultPriceId: price.id,
     },
